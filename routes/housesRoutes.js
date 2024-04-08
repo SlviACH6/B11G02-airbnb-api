@@ -10,35 +10,40 @@ router.post('/houses', async (req, res) => {
     const { location, price_per_night, bedroom, bathroom, description } =
       req.body
 
-    //declare the token from the jwt property in the cookie
-    let token = req.cookies.jwt
+    //req token from json web token
+    const token = req.cookies.jwt
 
-    // if token doesn't exist throw error
     if (!token) {
       throw new Error('Invalid authentication token')
     }
 
-    //else if token does exist verify user_id from the token
-    const { user_id } = jwt.verify(token, jwtSecret)
+    const decodedToken = jwt.verify(token, jwtSecret)
+
+    // The request was made with an invalid jwt token in the cookies
+
+    if (!decodedToken) {
+      throw new Error('Invalid authorization token')
+    }
+
+    // Else, the token is valid, the user is authenticated and can proceed
+    // with the rest of the operations in the route
+
+    const userId = decodedToken.user_id
 
     const queryString = `INSERT INTO houses (location, price_per_night, bedroom, bathroom, description, user_id)
-    VALUES (
-      '${location}',
-      ${price_per_night},
-      ${bedroom},
-      ${bathroom},
-      '${description}',
-      ${user_id}) 
-      RETURNING *`
+  VALUES (
+    '${location}',
+    ${price_per_night},
+    ${bedroom},
+    ${bathroom},
+    '${description}',
+    ${userId})`
 
-    // console.log(queryString)
-
-    console.log(token)
+    console.log(queryString)
 
     const { rows } = await db.query(queryString)
-    console.log(rows)
 
-    res.json(rows)
+    res.json(rows[0])
   } catch (err) {
     res.json({ error: err.message })
   }
@@ -104,11 +109,33 @@ router.get('/houses/:houseId', async (req, res) => {
 // patch houses route
 
 router.patch('/houses/:houseId', async (req, res) => {
-  let houseId = req.params.houseId
-  const { location, price_per_night, bedroom, bathroom, description, user_id } =
-    req.body
-  let patchQueryString = ` UPDATE houses`
   try {
+    //req token from json web token
+    const token = req.cookies.jwt
+
+    if (!token) {
+      throw new Error('Invalid authentication token')
+    }
+
+    const decodedToken = jwt.verify(token, jwtSecret)
+
+    // The request was made with an invalid jwt token in the cookies
+
+    if (!decodedToken) {
+      throw new Error('Invalid authorization token')
+    }
+
+    let houseId = req.params.houseId
+    const {
+      location,
+      price_per_night,
+      bedroom,
+      bathroom,
+      description,
+      user_id
+    } = req.body
+
+    let patchQueryString = ` UPDATE houses`
     if (
       location ||
       price_per_night ||
@@ -143,9 +170,49 @@ router.patch('/houses/:houseId', async (req, res) => {
 
     const resQuery = await db.query(patchQueryString)
     const { rowCount, rows } = resQuery
+
+    //if user_id from token is not thes same as user_id from the query then throw this error
+
+    if (rows[0].user_id !== decodedToken.user_id) {
+      throw new Error('You are not authorized')
+    }
+
     if (rowCount === 0) {
       throw new Error(`There is no house corresponding to this query.`)
     }
+
+    res.json(rows[0])
+  } catch (err) {
+    console.log(err.message)
+    res.json({ error: err.message })
+  }
+})
+
+router.delete('/houses/:house_id', async (req, res) => {
+  try {
+    //req token from json web token
+    const token = req.cookies.jwt
+
+    if (!token) {
+      throw new Error('Token does not exist please sign in')
+    }
+
+    const decodedToken = jwt.verify(token, jwtSecret)
+
+    // The request was made with an invalid jwt token in the cookies
+
+    if (!decodedToken) {
+      throw new Error('Invalid authorization token')
+    }
+
+    const { rows, rowCount, fields } = await db.query(`
+    DELETE FROM houses WHERE house_id = ${req.params.house_id} AND user_id = ${decodedToken.user_id} RETURNING *
+    `)
+
+    if (rowCount === 0) {
+      throw new Error('You are not authorized')
+    }
+
     res.json(rows[0])
   } catch (err) {
     console.log(err.message)
