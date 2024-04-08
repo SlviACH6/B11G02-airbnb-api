@@ -1,9 +1,10 @@
 import { Router } from 'express'
 import db from '../db.js'
 import jwt from 'jsonwebtoken'
-import { jwtSecret } from '../secrets.js'
 import bcrypt from 'bcrypt'
+
 const router = Router()
+const jwtSecret = process.env.JWTSECRET
 
 //Signup POST or create a new user
 router.post('/signup', async (req, res) => {

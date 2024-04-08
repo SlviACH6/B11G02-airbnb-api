@@ -2,8 +2,8 @@ import { Router } from 'express'
 import db from '../db.js' // import database connection
 
 import jwt from 'jsonwebtoken'
-import { jwtSecret } from '../secrets.js'
 
+const jwtSecret = process.env.JWTSECRET
 const router = Router()
 
 //routes to POST info on DATA BASE

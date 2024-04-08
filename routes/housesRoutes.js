@@ -1,8 +1,8 @@
 import { Router } from 'express'
 import db from '../db.js'
-import { jwtSecret } from '../secrets.js'
 import jwt from 'jsonwebtoken'
 
+const jwtSecret = process.env.JWTSECRET
 const router = Router()
 
 router.post('/houses', async (req, res) => {

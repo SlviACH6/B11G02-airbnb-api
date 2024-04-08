@@ -31,11 +31,6 @@ router.get('/users/:userId', async (req, res) => {
   }
 })
 
-// Create a new PATCH route for /users/:user_id, add it below the 2 existing GET routes
-// Make the route update the corresponding user row in the database with all of the data coming from the request body, such first_name, email, etc. according to the schema of your database
-// Make the route respond with the row of data updated in the database
-// Test, using Postman that a PATCH request to http://localhost:4100/users/1 updates user with id 1 in the database and that it returns the updated row.
-
 router.patch('/users/:user_id', async (req, res) => {
   const { first_name, last_name, email, password, picture } = req.body
 
