@@ -1,7 +1,7 @@
 // db.js
 import pg from 'pg'
-import { DBURL } from './secrets.js'
 
+const DBURL = process.env.DBURL
 const { Pool } = pg
 
 // Database connection parameters
