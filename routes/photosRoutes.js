@@ -4,11 +4,11 @@ import db from '../db.js'
 const router = Router()
 
 router.post('/photos', async (req, res) => {
-  const { photo_url, house_id } = req.body
+  const { house_photosurl, house_id } = req.body
   console.log(req.body)
 
-  const newPhotoQuery = `INSERT INTO houses_pictures (photo_url, house_id)
-      VALUES ('${photo_url}', ${house_id})
+  const newPhotoQuery = `INSERT INTO house_photos (house_photosurl, house_id)
+      VALUES ('${house_photosurl}', ${house_id})
       RETURNING * `
   console.log(newPhotoQuery)
   try {
@@ -24,7 +24,7 @@ router.post('/photos', async (req, res) => {
 router.get('/photos', async (req, res) => {
   let houseId = req.query.house
 
-  let queryString = `SELECT * FROM houses_pictures WHERE house_id = ${houseId}`
+  let queryString = `SELECT * FROM house_photos WHERE house_id = ${houseId}`
 
   if (houseId) {
     queryString += ``
@@ -50,7 +50,7 @@ router.get('/photos/:photoId', async (req, res) => {
   let photoId = req.params.photoId
   try {
     const { rows } = await db.query(
-      `SELECT * FROM houses_pictures WHERE photo_id = ${photoId}`
+      `SELECT * FROM house_photos WHERE photo_id = ${photoId}`
     )
     if (!rows.length) {
       throw new Error(`The photo Id number ${photoId} does not exist.`)
@@ -66,13 +66,13 @@ router.get('/photos/:photoId', async (req, res) => {
 ////PATCH PHOTOS ID ROUTE
 router.patch('/photos/:photoId', async (req, res) => {
   let photoIdPatch = req.params.photoId
-  let photoUrl = req.body.photo_url
+  let photoUrl = req.body.house_photosurl
 
   try {
-    const { rows } = await db.query(`UPDATE houses_pictures
-      SET photo_url = '${photoUrl}'
+    const { rows } = await db.query(`UPDATE house_photos
+      SET house_photosurl = '${photoUrl}'
       WHERE photo_id = ${photoIdPatch} 
-      RETURNING photo_url `)
+      RETURNING house_photosurl `)
 
     if (!rows.length) {
       throw new Error('The house ID provided is not valid')
