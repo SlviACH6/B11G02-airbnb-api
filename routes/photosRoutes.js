@@ -22,27 +22,18 @@ router.post('/photos', async (req, res) => {
 
 // GET PHOTOS ROUTES
 router.get('/photos', async (req, res) => {
-  let houseId = req.query.house
-
-  let queryString = `SELECT * FROM house_photos WHERE house_id = ${houseId}`
-
-  if (houseId) {
-    queryString += ``
-  }
-
   try {
-    const { rows } = await db.query(queryString)
-
-    console.log(`rows.length ${rows.length}`)
+    const { rows } = await db.query(`SELECT * FROM house_photos`)
 
     if (!rows.length) {
-      throw new Error('house parameter is required')
+      throw new Error('No photos found')
     }
+    console.log(rows)
 
     res.json(rows)
   } catch (err) {
     console.error(err.message)
-    res.json(err)
+    res.json({ error: err.message })
   }
 })
 
