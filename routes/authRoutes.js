@@ -44,14 +44,14 @@ router.post('/signup', async (req, res) => {
 })
 //LOGIN POST user already in DB
 router.post('/login', async (req, res) => {
-  const { password, email, user_id, first_name, last_name } = req.body
+  const { password, email } = req.body
   let dbpassword = `SELECT * FROM users WHERE users.email = '${email}'`
   try {
     let { rows } = await db.query(dbpassword)
 
     const isPswValid = await bcrypt.compare(password, rows[0].password)
 
-    if (rows.length === 0) {
+    if (!rows.length) {
       throw new Error('User not found or password incorrect')
     }
 
@@ -64,7 +64,7 @@ router.post('/login', async (req, res) => {
       let token = jwt.sign(payload, jwtSecret)
       res.cookie('jwt', token)
 
-      res.json(`${rows[0].last_name} you are logged in`)
+      res.json(`${rows[0].first_name} you are logged in`)
     }
   } catch (err) {
     res.json({ error: err.message })
