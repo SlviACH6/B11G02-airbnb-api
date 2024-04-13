@@ -92,7 +92,7 @@ router.get('/profile', async (req, res) => {
       throw new Error('Invalid authentication token')
     }
     const { rows: userRows } = await db.query(`
-      SELECT user_id, first_name, last_name, picture, email
+      SELECT user_id, first_name, last_name, profile_pictureurl, email
       FROM users WHERE user_id = ${decodedToken.user_id}
     `)
     res.json(userRows[0])
