@@ -44,39 +44,36 @@ router.post('/bookings', async (req, res) => {
 //routes to GET info from DATA BASE
 router.get('/bookings', async (req, res) => {
   try {
-    // Validate Token
-    const decodedToken = jwt.verify(req.cookies.jwt, jwtSecret)
-    if (!decodedToken || !decodedToken.user_id || !decodedToken.email) {
-      throw new Error('Invalid authentication token')
+    let userBooking = ''
+
+    const token = req.cookies.jwt
+
+    if (!token) {
+      throw new Error('Invalid authentication token. Please sign in')
     }
-    // Get bookings
-    let sqlquery = `
-      SELECT
-        TO_CHAR(bookings.from_date, 'D Mon yyyy') AS from_date,
-        TO_CHAR(bookings.to_date, 'D Mon yyyy') AS to_date,
-        bookings.price_night AS price,
-        bookings.nights,
-        bookings.price_total,
-        houses.house_id,
-        houses.location,
-        houses.rooms,
-        houses.bathrooms,
-        houses.reviews_count,
-        houses.rating,
-        photos.photo
-      FROM bookings
-      LEFT JOIN houses ON houses.house_id = bookings.house_id
-      LEFT JOIN (
-          SELECT DISTINCT ON (house_id) house_id, photo
-          FROM houses_photos
-      ) AS photos ON photos.house_id = houses.house_id
-      WHERE bookings.user_id = ${decodedToken.user_id}
-      ORDER BY bookings.from_date DESC
-    `
-    // Respond
-    let { rows } = await db.query(sqlquery)
+
+    const decodedToken = jwt.verify(token, jwtSecret)
+
+    if (!decodedToken) {
+      throw new Error('Invalid authorization token')
+    }
+
+    const userId = decodedToken.user_id
+
+    if (userId) {
+      userBooking = `SELECT * FROM bookings WHERE user_id = ${userId} ORDER BY check_in DESC`
+    }
+    if (!userId) {
+      userBooking = `SELECT * FROM bookings ORDER BY check_in DESC`
+    }
+    console.log(userBooking)
+    const { rows } = await db.query(userBooking)
+    if (!rows.length) {
+      throw new Error(`There is no booking corresponding to this user.`)
+    }
     res.json(rows)
   } catch (err) {
+    console.error(err.message)
     res.json({ error: err.message })
   }
 })
