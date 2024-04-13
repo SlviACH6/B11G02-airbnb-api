@@ -16,7 +16,7 @@ router.post('/signup', async (req, res) => {
     WHERE email ='${newUser.email}'
     `)
     if (queryResult.rowCount) {
-      throw new Error('Email already exists')
+      throw new Error('Email already exists, please LogIn')
     }
     //hash the password
     const salt = await bcrypt.genSalt(10)
@@ -37,7 +37,7 @@ router.post('/signup', async (req, res) => {
     console.log(token)
     // creating the cookie
     res.cookie('jwt', token)
-    res.json({ message: 'logged in' })
+    res.json({ message: 'Sign up OK! Welcome!' })
   } catch (err) {
     res.json({ error: err.message })
   }
