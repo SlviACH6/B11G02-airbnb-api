@@ -1,6 +1,5 @@
 import { Router } from 'express'
 import db from '../db.js' // import database connection
-
 import jwt from 'jsonwebtoken'
 
 const jwtSecret = process.env.JWTSECRET

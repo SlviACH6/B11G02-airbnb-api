@@ -22,8 +22,8 @@ router.post('/signup', async (req, res) => {
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(newUser.password, salt)
     //create the user
-    const queryString = `INSERT INTO users (first_name, last_name, email, password)
-    VALUES ('${newUser.first_name}', '${newUser.last_name}', '${newUser.email}', '${hashedPassword}')
+    const queryString = `INSERT INTO users (first_name, last_name, email, password, profile_pictureurl)
+    VALUES ('${newUser.first_name}', '${newUser.last_name}', '${newUser.email}', '${hashedPassword}', '${newUser.profile_pictureurl}')
     RETURNING user_id, email`
     const insertion = await db.query(queryString)
     //creating the token
@@ -112,8 +112,8 @@ router.patch('/profile', async (req, res) => {
     if (
       !req.body.first_name ||
       !req.body.last_name ||
-      !req.body.profile_pictureurl ||
-      !req.body.email
+      !req.body.email ||
+      !req.body.profile_pictureurl
     ) {
       throw new Error('at least 1 field must be modified')
     }
