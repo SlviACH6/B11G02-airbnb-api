@@ -31,37 +31,4 @@ router.get('/users/:userId', async (req, res) => {
   }
 })
 
-router.patch('/users/:user_id', async (req, res) => {
-  const { first_name, last_name, email, password, picture } = req.body
-
-  let queryArray = []
-
-  if (first_name) {
-    queryArray.push(` first_name = '${first_name}'`)
-  }
-  if (last_name) {
-    queryArray.push(` last_name = '${last_name}'`)
-  }
-  if (email) {
-    queryArray.push(` email = '${email}'`)
-  }
-  if (password) {
-    queryArray.push(` password = '${password}'`)
-  }
-  if (picture) {
-    queryArray.push(` profile_picture = '${picture}'`)
-  }
-
-  queryArray = queryArray.join(',')
-
-  let queryString = `UPDATE users SET ${queryArray} WHERE user_id = ${req.params.user_id}`
-
-  try {
-    const { rows } = await db.query(queryString)
-    res.json(rows)
-  } catch (err) {
-    res.json({ error: err.message })
-  }
-})
-
 export default router

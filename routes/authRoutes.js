@@ -110,9 +110,9 @@ router.patch('/profile', async (req, res) => {
     }
     // Validate fields
     if (
-      !req.body.first_name &&
-      !req.body.last_name &&
-      !req.body.picture &&
+      !req.body.first_name ||
+      !req.body.last_name ||
+      !req.body.profile_pictureurl ||
       !req.body.email
     ) {
       throw new Error('at least 1 field must be modified')
@@ -128,11 +128,11 @@ router.patch('/profile', async (req, res) => {
     if (req.body.email) {
       query += `email = '${req.body.email}', `
     }
-    if (req.body.picture) {
-      query += `picture = '${req.body.picture}', `
+    if (req.body.profile_pictureurl) {
+      query += `profile_pictureurl = '${req.body.profile_pictureurl}', `
     }
     query = query.slice(0, -2)
-    query += `WHERE user_id = ${decodedToken.user_id} RETURNING picture, first_name, last_name, email, user_id`
+    query += `WHERE user_id = ${decodedToken.user_id} RETURNING user_id, first_name, last_name, email, profile_pictureurl  `
     const { rows: userRows } = await db.query(query)
     // Respond
     res.json(userRows[0])
