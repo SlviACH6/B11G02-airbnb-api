@@ -23,12 +23,12 @@ router.post('/bookings', async (req, res) => {
       throw new Error('Invalid authorization token')
     }
 
-    const userId = decodedToken.user_id
+    const user_id = decodedToken.user_id
 
-    console.log(userId)
+    console.log(user_id)
 
     const newBookingQuery = `INSERT INTO bookings (user_id, house_id, check_in, check_out, total_price, booked_on)
-      VALUES (${userId}, ${house_id}, '${check_in}', '${check_out}', ${total_price}, '${booked_on}')
+      VALUES (${user_id}, ${house_id}, '${check_in}', '${check_out}', ${total_price}, '${booked_on}')
       RETURNING * `
 
     const { rows } = await db.query(newBookingQuery)
@@ -40,80 +40,49 @@ router.post('/bookings', async (req, res) => {
   }
 })
 
-//routes to GET info from DATA BASE
+// route to a specific house if with params
 router.get('/bookings', async (req, res) => {
   try {
-    let userBooking = ''
-
-    const token = req.cookies.jwt
-
-    if (!token) {
-      throw new Error('Invalid authentication token. Please sign in')
+    // Validate Token
+    const decodedToken = jwt.verify(req.cookies.jwt, jwtSecret)
+    if (!decodedToken || !decodedToken.user_id || !decodedToken.email) {
+      throw new Error('Invalid authentication token')
     }
-
-    const decodedToken = jwt.verify(token, jwtSecret)
-
-    if (!decodedToken) {
-      throw new Error('Invalid authorization token')
-    }
-
-    const userId = decodedToken.user_id
-
-    if (userId) {
-      userBooking = `SELECT * FROM bookings WHERE user_id = ${userId} ORDER BY check_in DESC`
-    }
-    if (!userId) {
-      userBooking = `SELECT * FROM bookings ORDER BY check_in DESC`
-    }
-    console.log(userBooking)
-    const { rows } = await db.query(userBooking)
-    if (!rows.length) {
-      throw new Error(`There is no booking corresponding to this user.`)
-    }
+    // Get bookings
+    let sqlquery = `
+      SELECT
+        TO_CHAR(bookings.from_date, 'D Mon yyyy') AS from_date,
+        TO_CHAR(bookings.to_date, 'D Mon yyyy') AS to_date,
+        bookings.price_night AS price,
+        bookings.nights,
+        bookings.price_total,
+        houses.house_id,
+        houses.location,
+        houses.rooms,
+        houses.bathrooms,
+        houses.reviews_count,
+        houses.rating,
+        photos.photo
+      FROM bookings
+      LEFT JOIN houses ON houses.house_id = bookings.house_id
+      LEFT JOIN (
+          SELECT DISTINCT ON (house_id) house_id, photo
+          FROM houses_photos
+      ) AS photos ON photos.house_id = houses.house_id
+      WHERE bookings.user_id = ${decodedToken.user_id}
+      ORDER BY bookings.from_date DESC
+    `
+    // Respond
+    let { rows } = await db.query(sqlquery)
     res.json(rows)
   } catch (err) {
-    console.error(err.message)
     res.json({ error: err.message })
   }
 })
 
-// route to a specific house if with params
-router.get('/bookings/:bookingId', async (req, res) => {
+router.delete('/bookings/:booking_id', async (req, res) => {
   try {
-    let bookingId = req.params.bookingId
-    const token = req.cookies.jwt
-
-    if (!token) {
-      throw new Error('Invalid authentication token. Please sign in')
-    }
-
-    const decodedToken = jwt.verify(token, jwtSecret)
-
-    if (!decodedToken) {
-      throw new Error('Invalid authorization token')
-    }
-
-    const userId = decodedToken.user_id
-    console.log(userId)
-
-    const { rows, rowCount } = await db.query(
-      `SELECT * FROM bookings WHERE booking_id = ${bookingId} AND user_id = ${userId} `
-    )
-
-    if (rowCount === 0) {
-      throw new Error(`You are not authorized`)
-    }
-    console.log(rows)
-    res.json(rows[0])
-  } catch (err) {
-    console.error(err.message)
-    res.json({ error: err.message })
-  }
-})
-
-router.delete('/bookings/:bookingId', async (req, res) => {
-  try {
-    let bookingId = req.params.bookingId
+    let booking_id = req.params.booking_id
 
     const token = req.cookies.jwt
 
@@ -127,18 +96,18 @@ router.delete('/bookings/:bookingId', async (req, res) => {
       throw new Error('Invalid authorization token')
     }
 
-    const userId = decodedToken.user_id
-    console.log(userId)
+    const user_id = decodedToken.user_id
+    console.log(user_id)
 
     const { rows, rowCount } = await db.query(
-      `DELETE FROM bookings WHERE booking_id = ${bookingId} AND user_id = ${userId} RETURNING *`
+      `DELETE FROM bookings WHERE booking_id = ${booking_id} AND user_id = ${user_id} RETURNING *`
     )
 
     if (rowCount === 0) {
       throw new Error('You are not authorized')
     }
 
-    res.json(`booking: ${bookingId} has been deleted`)
+    res.json(`booking: ${booking_id} has been deleted`)
   } catch (err) {
     res.json({ error: err.message })
   }
